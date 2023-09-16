@@ -72,11 +72,10 @@ export const userRouter = () => {
         const password = user.password;
         const isMatch = await Bun.password.verify(body.password, password);
         if (!isMatch) {
-          set.status = 403;
-          return {
-            code: "Invalid-Crednetails",
+          throw new BaseError({
+            code: "Invalid-Credentials",
             message: "Invalid username or password",
-          };
+          });
         }
         const payload = {
           sub: user.id,
@@ -88,12 +87,27 @@ export const userRouter = () => {
         });
         set.status = 200;
         return {
-          code: "Logged-In-Sucessfully",
+          code: "Logged-In-Successfully",
           data: { token },
         };
       },
       {
         body: loginValidation,
+        error({ code, error, set }) {
+          if (error instanceof BaseError) {
+            set.status = 403;
+            return {
+              code: error.data.code,
+              message: error.data.message,
+            };
+          } else {
+            set.status = 500;
+            return {
+              code: "Internal-Server-Error",
+              message: "Something Went Wrong ,Please try again later",
+            };
+          }
+        },
       }
     );
 };

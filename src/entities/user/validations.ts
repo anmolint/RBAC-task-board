@@ -16,7 +16,7 @@ export const signUpValidation = t.Object({
   role: t.Enum(employeeType),
 });
 
-export const loginValidaion = t.Object({
+export const loginValidation = t.Object({
   email: t.String({
     format: "email",
   }),

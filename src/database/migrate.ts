@@ -5,6 +5,7 @@ import { envVars } from "../config";
 
 const sql = postgres(envVars.databaseUrl, { max: 1 });
 const db = drizzle(sql);
+
 async function main() {
   console.info("migrations started  ---------");
   await migrate(db, { migrationsFolder: "./drizzle" });

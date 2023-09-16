@@ -2,15 +2,10 @@ import { Elysia, t } from "elysia";
 import bearer from "@elysiajs/bearer";
 import jwt from "@elysiajs/jwt";
 import cookie from "@elysiajs/cookie";
-import { loginValidaion, signUpValidation } from "./validations";
+import { loginValidation, signUpValidation } from "./validations";
 import { createUser, getUser } from "./user.dao";
 import { envVars } from "../../config";
-
-class DuplicateEmailError extends Error {
-  constructor() {
-    super("Duplicate email");
-  }
-}
+import { BaseError } from "../../error";
 
 export const userRouter = () => {
   return new Elysia({ prefix: "/v1/users" })
@@ -42,7 +37,10 @@ export const userRouter = () => {
           return registeredUser;
         } catch (exception) {
           if (exception.code === "23505") {
-            throw new DuplicateEmailError();
+            throw new BaseError({
+              code: "Duplicate-Email",
+              message: "User-With-Given-Email-already-Exists",
+            });
           } else {
             throw exception;
           }
@@ -51,11 +49,11 @@ export const userRouter = () => {
       {
         body: signUpValidation,
         error({ code, error, set }) {
-          if (error instanceof DuplicateEmailError) {
+          if (error instanceof BaseError) {
             set.status = 409;
             return {
-              code: "Invalid-Crednetails",
-              message: "Email-already-in-use",
+              code: error.data.code,
+              message: error.data.message,
             };
           } else {
             set.status = 500;
@@ -95,7 +93,7 @@ export const userRouter = () => {
         };
       },
       {
-        body: loginValidaion,
+        body: loginValidation,
       }
     );
 };

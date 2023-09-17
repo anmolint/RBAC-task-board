@@ -1,18 +1,18 @@
 import { Elysia, t } from "elysia";
-import bearer from "@elysiajs/bearer";
 import jwt from "@elysiajs/jwt";
 import cookie from "@elysiajs/cookie";
+import { ulid } from "ulidx";
 import { loginValidation, signUpValidation } from "./validations";
-import { createUser, getUser } from "./user.dao";
+import { createUser, getUser, getUserById } from "./user.dao";
 import { envVars } from "../../config";
 import { BaseError } from "../../error";
+import { authentication } from "../../libs/auth";
 
 export const userRouter = () => {
   return new Elysia({ prefix: "/v1/users" })
-    .use(bearer())
     .use(
       jwt({
-        id: "jwt",
+        jti: ulid(),
         secret: envVars.jwtSecret,
         iat: Date.now(),
         exp: Date.now() + 60 * 60,
@@ -49,19 +49,25 @@ export const userRouter = () => {
       {
         body: signUpValidation,
         error({ code, error, set }) {
+          if (code === "VALIDATION" || code === "PARSE") {
+            set.status = 400;
+            return {
+              code: "Validation-Error",
+              message: "Please pass the correct parameter type",
+            };
+          }
           if (error instanceof BaseError) {
             set.status = 409;
             return {
               code: error.data.code,
               message: error.data.message,
             };
-          } else {
-            set.status = 500;
-            return {
-              code: "Internal-Server-Error",
-              message: "Something Went Wrong ,Please try again later",
-            };
           }
+          set.status = 500;
+          return {
+            code: "Internal-Server-Error",
+            message: "Something Went Wrong ,Please try again later",
+          };
         },
       }
     )
@@ -94,19 +100,58 @@ export const userRouter = () => {
       {
         body: loginValidation,
         error({ code, error, set }) {
+          if (code === "VALIDATION") {
+            set.status = 400;
+            return {
+              code: "Validation-Error",
+              message: "Please pass the correct parameters",
+            };
+          }
+
           if (error instanceof BaseError) {
             set.status = 403;
             return {
               code: error.data.code,
               message: error.data.message,
             };
-          } else {
-            set.status = 500;
+          }
+          set.status = 500;
+          return {
+            code: "Internal-Server-Error",
+            message: "Something Went Wrong ,Please try again later",
+          };
+        },
+      }
+    )
+    .use(authentication)
+    .get(
+      "/profile",
+      async ({ userId }) => {
+        const user = await getUserById(userId as string);
+        return user;
+      },
+      {
+        error({ code, error, set }) {
+          if (code === "VALIDATION") {
+            set.status = 400;
             return {
-              code: "Internal-Server-Error",
-              message: "Something Went Wrong ,Please try again later",
+              code: "Validation-Error",
+              message: "Please pass the correct parameters",
             };
           }
+
+          if (error instanceof BaseError) {
+            set.status = 401;
+            return {
+              code: error.data.code,
+              message: error.data.message,
+            };
+          }
+          set.status = 500;
+          return {
+            code: "Internal-Server-Error",
+            message: "Something Went Wrong ,Please try again later",
+          };
         },
       }
     );

@@ -16,6 +16,7 @@
     "drizzle-orm": "^0.28.6",
     "elysia": "latest",
     "postgres": "^3.3.5",
+    "ulidx": "^2.1.0",
     "zod": "^3.22.2"
   },
   "devDependencies": {

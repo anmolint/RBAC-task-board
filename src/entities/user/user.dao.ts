@@ -17,3 +17,13 @@ export const getUser = async (email: string) => {
   const user = await db.select().from(users).where(eq(users.email, email));
   return user[0];
 };
+
+export const getUserById = async (id: string) => {
+  const user = await db.select().from(users).where(eq(users.id, id));
+  return user[0];
+};
+
+export const userExists = async (id: string) => {
+  const user = await db.select().from(users).where(eq(users.id, id));
+  return user.length > 0;
+};

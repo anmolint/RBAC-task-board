@@ -3,4 +3,5 @@ import postgres from "postgres";
 import { envVars } from "../config";
 
 const queryClient = postgres(envVars.databaseUrl);
+
 export const db: PostgresJsDatabase = drizzle(queryClient);

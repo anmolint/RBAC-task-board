@@ -11,4 +11,4 @@ const envSchema = z.object({
   PORT: z.preprocess(Number, z.number()),
 });
 
-export const envVars = envSchema.parse(Bun.env);
+export const envVars = envSchema.parse(process.env);

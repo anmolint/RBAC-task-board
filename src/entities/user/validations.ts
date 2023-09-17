@@ -1,6 +1,6 @@
 import { t } from "elysia";
 
-enum employeeType {
+export enum employeeType {
   admin = "admin",
   employee = "employee",
   manager = "manager",
